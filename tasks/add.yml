@@ -65,7 +65,7 @@
 - name: wordpress httpd vhost
   template:
     src: templates/wordpress.conf.j2
-    dest: /etc/httpd/conf.d/{{ wp_account }}.conf
+    dest: /etc/httpd/conf.d/{{ wp_host }}.conf
     owner: root
     group: root
     mode: '0644'
