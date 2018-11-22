@@ -1,0 +1,55 @@
+---
+- name: Add EPEL repo
+  yum:
+    name: epel-release
+    state: latest
+
+- name: remi
+  yum_repository:
+    name: remi
+    description: Remi PHP 71
+    file: remi-php71
+    # baseurl: http://rpms.remirepo.net/enterprise/7/php71/$basearch/
+    mirrorlist: http://cdn.remirepo.net/enterprise/7/php71/mirror
+    enabled: yes
+    gpgkey: https://rpms.remirepo.net/RPM-GPG-KEY-remi
+
+- name: Safe-Remi
+  yum_repository:
+    name: Safe-Remi
+    description: Safe Remi
+    mirrorlist: http://cdn.remirepo.net/enterprise/7/safe/mirror
+    enabled: yes
+    gpgkey: https://rpms.remirepo.net/RPM-GPG-KEY-remi
+
+- name: Packages for WP
+  package:
+    name: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+    - fail2ban
+    - httpd
+    - php
+    - php-openssl
+    - php-pdo
+    - php-mbstring
+    - php-tokenizer
+    - php-curl
+    - php-mysql
+    - php-ldap
+    - php-zip
+    - php-fileinfo
+    - php-gd
+    - php-dom
+    - php-mcrypt
+    - php-bcmath
+    - php-pecl-ssh2
+    - php-devel
+    - libssh2-devel
+    - php-xml
+    - composer
+    - policycoreutils-python
+    - unzip
+    - setroubleshoot
+    - setools

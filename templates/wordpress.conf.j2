@@ -1,0 +1,24 @@
+<VirtualHost *:80>
+        ServerAdmin {{ wp_email }}
+        ServerName {{ wp_host }}
+        ServerAlias www.{{ wp_host }}
+        DocumentRoot /home/{{ wp_account }}/public_html
+        <Directory />
+                Options FollowSymLinks
+                AllowOverride None
+        </Directory>
+        <Directory /home/{{ wp_account }}/public_html/>
+		Options All
+		AllowOverride All
+		Require all granted
+        </Directory>
+
+        ErrorLog /var/log/httpd/{{ wp_account }}_error.log
+
+        # Possible values include: debug, info, notice, warn, error, crit,
+        # alert, emerg.
+        LogLevel warn
+
+        CustomLog /var/log/httpd/{{ wp_account }}_access.log combined
+
+</VirtualHost>

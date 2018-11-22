@@ -1,0 +1,112 @@
+---
+- name: create db
+  command: mysql -uroot -p{{ mysql_root }} -e 'use mysql; CREATE DATABASE {{ wp_account }};'
+
+- name: perms
+  command: mysql -uroot -p{{ mysql_root }} -e "GRANT ALL privileges ON {{ wp_account }}.* TO '{{ wp_account }}'@'localhost' IDENTIFIED BY '{{ lookup('password', 'credentials/mysqlpassword length=15') }}'"
+
+- name: Add user group {{ wp_account }}
+  group:
+    name: "{{ wp_account }}"
+    state: present
+
+- name: Add user account {{ wp_account }}
+  user:
+    name: "{{ wp_account }}"
+    password: "{{ wp_pass | password_hash('sha512') }}"
+    group: "{{ wp_account }}"
+    groups: "internal-sftp"
+    append: yes
+
+- name: adjust home directory permissions for apache
+  file: 
+    path: /home/{{ wp_account }}
+    owner: "{{ wp_account }}"
+    group: "{{ wp_account }}"
+    mode: 0775
+    state: directory
+
+- name: create ssh directory for wp keys
+  file:
+    path: /home/{{ wp_account }}/ssh
+    owner: "{{ wp_account }}"
+    group: "{{ wp_account }}"
+    mode: 0755
+    state: directory
+
+- name: Generate rsa key for wordpress
+  command : ssh-keygen -q -t rsa -f /home/{{ wp_account }}/ssh/wp_rsa -C "" -N ""
+  args:
+    creates: /home/{{ wp_account }}/ssh/wp_rsa
+  become: yes
+  become_user: "{{ wp_account }}"
+
+- name: adjust perms
+  file:
+    path: /home/{{ wp_account }}/ssh
+    owner: "{{ wp_account }}"
+    group: "{{ apache_user }}"
+    mode: 0640
+    state: directory
+    recurse: yes
+
+- name: Set authorized key 
+  authorized_key:
+    user: "{{ wp_account }}"
+    state: present
+    key: "{{ lookup('file', '/home/{{ wp_account }}/ssh/wp_rsa.pub') }}"
+    key_options: 'no-port-forwarding,from="127.0.0.1"'
+
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: wordpress httpd vhost
+  template:
+    src: templates/wordpress.conf.j2
+    dest: /etc/httpd/conf.d/{{ wp_account }}.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Create public_html directory
+  file:
+    path: "/home/{{ wp_account }}/public_html"
+    owner: "{{ wp_account }}"
+    group: "{{ wp_account }}"
+    mode: '0755'
+    state: directory
+    recurse: yes
+
+- name: Drop an htaccess file
+  template:
+    src: templates/htaccess.j2
+    dest: /home/{{ wp_account }}/public_html/.htaccess
+    owner: "{{ wp_account }}"
+    group: "{{ wp_account }}"
+    mode: '0644'
+
+- name: Downloading latest version of Wordpress
+  command: /usr/bin/wp --allow-root core download --path=/home/{{ wp_account }}/public_html
+
+- name: Configuring Wordpress config file
+  command: /usr/bin/wp --allow-root config create --dbname={{ wp_account }} --dbuser={{ wp_account }} --dbpass={{ lookup('password', 'credentials/mysqlpassword length=15') }} --path=/home/{{ wp_account }}/public_html
+
+- name: Installing Wordpress
+  command: /usr/bin/wp --allow-root core install --url={{ wp_host }} --title={{ wp_host }} --admin_user={{ wp_account }} --admin_password={{ wp_pass }} --admin_email={{ wp_email }} --skip-email --path=/home/{{ wp_account }}/public_html
+
+- name: get wp-fail2ban plugin
+  shell: wget -O /tmp/fail2ban.$$ https://github.com/thebrandonallen/wp-fail2ban-redux/archive/master.zip && (cd /home/{{ wp_account }}/public_html/wp-content/plugins && unzip /tmp/fail2ban.$$ && rm -f /tmp/fail2ban.$$)
+
+#- name: activate wp-fail2ban plugin
+#  command: /usr/bin/wp --allow-root plugin activate wp-fail2ban-redux-master --path=/home/{{ wp_account }}/public_html
+
+- name: adjust wp-config for ssh
+  lineinfile:
+    dest: /home/{{ wp_account }}/public_html/wp-config.php
+    line: "define('FTP_PUBKEY','/home/{{ wp_account }}/ssh/wp_rsa.pub');\ndefine('FTP_PRIKEY','/home/{{ wp_account }}/ssh/wp_rsa');\ndefine('FTP_USER','{{ wp_account }}');\ndefine('FTP_PASS','');\ndefine('FTP_HOST','127.0.0.1:22');\n"
+    insertafter: "require_once ABSPATH . 'wp-settings.php';"
+
+#- name: adjusting permissions
+#  command: /usr/local/bin/wp-fixperms.sh

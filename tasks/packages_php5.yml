@@ -1,0 +1,37 @@
+---
+- name: Add EPEL repo
+  yum:
+    name: epel-release
+    state: latest
+
+- name: Packages for WP
+  package:
+    name: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+    - fail2ban
+    - httpd
+    - php
+    - php-openssl
+    - php-pdo
+    - php-mbstring
+    - php-tokenizer
+    - php-curl
+    - php-mysql
+    - php-ldap
+    - php-zip
+    - php-fileinfo
+    - php-gd
+    - php-dom
+    - php-mcrypt
+    - php-bcmath
+    - php-pecl-ssh2
+    - php-devel
+    - libssh2-devel
+    - php-xml
+    - composer
+    - policycoreutils-python
+    - unzip
+    - setroubleshoot
+    - setools

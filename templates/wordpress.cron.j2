@@ -1,0 +1,6 @@
+#!/bin/sh
+/usr/local/bin/wp-fixperms.sh
+sudo -u {{ wp_account }} wp --path=/home/{{ wp_account }}/public_html core update
+sudo -u {{ wp_account }} wp --path=/home/{{ wp_account }}/public_html plugin update --all
+sudo -u {{ wp_account }} wp --path=/home/{{ wp_account }}/public_html theme update --all
+/usr/local/bin/wp-fixperms.sh

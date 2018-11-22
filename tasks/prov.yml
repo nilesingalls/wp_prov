@@ -1,0 +1,123 @@
+---
+- name: Put SELinux in permissive mode, logging actions that would be blocked.
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: Set selinux bool to allow httpd to connect to anon write
+  seboolean:
+    name: allow_httpd_anon_write
+    state: true
+    persistent: yes
+
+- name: Set selinux httpd_enable_homedirs
+  seboolean:
+    name: httpd_enable_homedirs
+    state: true
+    persistent: yes
+
+- name: Set selinux httpd_read_user_content
+  seboolean:
+    name: httpd_read_user_content
+    state: true
+    persistent: yes
+
+- name: Set selinux bool to allow httpd to connect to the network
+  seboolean:
+    name: httpd_can_network_connect
+    state: true
+    persistent: yes
+
+- name: Set selinux to allow apache to read/write into directories with httpd_sys_content
+  seboolean:
+    name: httpd_unified
+    state: true
+    persistent: yes
+
+- name: remove ssl.conf
+  file:
+    state: absent
+    path: /etc/httpd/conf.d/ssl.conf
+
+- name: remove default_vhost.conf
+  file:
+    state: absent
+    path: /etc/httpd/conf.d/default_vhost.conf
+
+- name: downloading_wp
+  command: /usr/bin/wget -O /usr/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar creates=/usr/bin/wp
+
+- name: downloading_wp_perms
+  file: path=/usr/bin/wp mode=0775
+
+#- name: Place our reset-permissions script
+#  template:
+#    src: templates/wp-fixperms.sh
+#    dest: /usr/local/bin/wp-fixperms.sh
+#    owner: root
+#    group: root
+#    mode: '0775'
+
+- name: get fail2ban wordpress.conf
+  command: wget -O /etc/fail2ban/jail.d/wordpress.conf https://raw.githubusercontent.com/thebrandonallen/wp-fail2ban-redux/develop/config/jail/wordpress.conf
+
+- name: get fail2ban wordpress-hard.conf
+  command: wget -O /etc/fail2ban/filter.d/wordpress-hard.conf https://raw.githubusercontent.com/thebrandonallen/wp-fail2ban-redux/develop/config/filters/wordpress-hard.conf
+
+- name: get fail2ban wordpress-soft.conf
+  command: wget -O /etc/fail2ban/filter.d/wordpress-soft.conf https://raw.githubusercontent.com/thebrandonallen/wp-fail2ban-redux/develop/config/filters/wordpress-soft.conf
+
+- replace: 
+    dest: /etc/fail2ban/jail.d/wordpress.conf
+    regexp: '^logpath(.*)$'
+    replace: 'logpath = /var/log/secure'
+
+- name: adjust fail2ban action
+  lineinfile:
+    dest: /etc/fail2ban/jail.d/wordpress.conf
+    line: "action = iptables-multiport[name=fail2ban-wp, port=\"http,https\", protocol=tcp]\n#sendmail-whois[name=fail2ban-wp, dest=root@localhost]"
+    insertafter: "port = http,https"
+
+- name: Enable service fail2ban
+  service:
+    name: fail2ban
+    enabled: yes
+    state: restarted
+
+- name: Restart DBUS
+  command: systemctl restart dbus
+
+- name: Enable service firewalld
+  service:
+    name: firewalld
+    enabled: yes
+    state: started
+
+- name: Add TCP port 22 to firewall rules
+  firewalld:
+    service: ssh
+    permanent: true
+    state: enabled
+
+- name: Add TCP port 80 to firewall rules
+  firewalld:
+    service: http
+    permanent: true
+    state: enabled
+
+- name: Add TCP port 443 to firewall rules
+  firewalld:
+    service: https
+    permanent: true
+    state: enabled
+
+- name: Restart service firewalld
+  service:
+    name: firewalld
+    enabled: yes
+    state: restarted
+
+- name: Put SELinux in enabled mode
+  selinux:
+    policy: targeted
+    state: enforcing

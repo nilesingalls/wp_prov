@@ -1,0 +1,6 @@
+- src: https://github.com/geerlingguy/ansible-role-pip/archive/master.tar.gz
+  name: ansible-role-pip
+- src: robertdebock.bootstrap
+- src: robertdebock.epel
+- src: robertdebock.httpd
+- src: robertdebock.mysql

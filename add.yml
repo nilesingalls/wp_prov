@@ -1,0 +1,8 @@
+- hosts: localhost
+  any_errors_fatal: true
+
+  vars:
+    apache_user: apache
+
+  tasks:
+    - import_tasks: tasks/application_longterm.yml

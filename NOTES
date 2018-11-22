@@ -1,0 +1,12 @@
+run with the following:
+
+ON FIRST RUN
+ansible-galaxy install -p ./roles/ -r requirements.yml
+ansible-playbook pip.yml
+ansible-playbook prov.yml -e "mysql_root='_secure_pass_' mysql_host='_server_hostname_'"
+
+then, later:
+
+ansible-playbook add.yml -e "wp_email=postmaster@_domain_ wp_host=_wordpress_url_ wp_pass=_cli_pass_ wp_account=_cli_user_"
+
+then, pull over the old db and wp-content files from wherever they are. (if you are migrating)
