@@ -28,6 +28,8 @@
     state: latest
   vars:
     packages:
+    - git
+    - wget
     - fail2ban
     - httpd
     - php

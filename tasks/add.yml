@@ -15,7 +15,7 @@
     name: "{{ wp_account }}"
     password: "{{ wp_pass | password_hash('sha512') }}"
     group: "{{ wp_account }}"
-    groups: "internal-sftp"
+    groups: "sftpusers"
     append: yes
 
 - name: adjust home directory permissions for apache

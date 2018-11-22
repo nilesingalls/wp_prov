@@ -3,13 +3,6 @@
   become: yes
   vars:
     mysql_bind_address: 127.0.0.1
-    mysql_databases:
-      - name: "{{ wp_account }}"
-    mysql_users:
-      - name: "{{ wp_account }}"
-        password: "{{ lookup('password', 'credentials/mysqlpassword length=15') }}"
-        priv: "{{ wp_account }}.*:ALL"
-        host: localhost
 
 - name: set root password
   command: mysql -e 'use mysql; update user SET PASSWORD=PASSWORD("{{ mysql_root }}") WHERE USER="root"; flush privileges;'
