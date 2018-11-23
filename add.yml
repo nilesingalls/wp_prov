@@ -5,4 +5,4 @@
     apache_user: apache
 
   tasks:
-    - import_tasks: tasks/application_longterm.yml
+    - import_tasks: tasks/add.yml

@@ -1,0 +1,17 @@
+- hosts: localhost
+  any_errors_fatal: true
+
+  roles:
+    - robertdebock.bootstrap
+    - robertdebock.epel
+    - robertdebock.mysql
+
+  vars:
+    epel_package_state: present
+    apache_user: apache
+
+  tasks:
+#    - import_tasks: tasks/robertdebock.httpd.yml
+#    - import_tasks: tasks/robertdebock.mysql.yml
+#    - import_tasks: tasks/packages_php5.yml
+    - import_tasks: tasks/prov.yml

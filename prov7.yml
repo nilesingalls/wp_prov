@@ -4,6 +4,7 @@
   roles:
     - robertdebock.bootstrap
     - robertdebock.epel
+    - robertdebock.mysql.yml
 
   vars:
     epel_package_state: present
@@ -17,4 +18,6 @@
           state: started
         when: debug is defined
       - import_tasks: tasks/robertdebock.httpd.yml
-      - import_tasks: tasks/main.yml
+      - import_tasks: tasks/robertdebock.mysql.yml
+      - import_tasks: tasks/packages_php7.yml
+      - import_tasks: tasks/prov.yml
