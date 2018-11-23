@@ -21,8 +21,8 @@
 - name: adjust home directory permissions for apache
   file: 
     path: /home/{{ wp_account }}
-    owner: "{{ wp_account }}"
-    group: "{{ wp_account }}"
+    owner: root
+    group: root
     mode: 0775
     state: directory
 
