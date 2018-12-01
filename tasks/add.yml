@@ -106,7 +106,13 @@
   lineinfile:
     dest: /home/{{ wp_account }}/public_html/wp-config.php
     line: "define('FTP_PUBKEY','/home/{{ wp_account }}/ssh/wp_rsa.pub');\ndefine('FTP_PRIKEY','/home/{{ wp_account }}/ssh/wp_rsa');\ndefine('FTP_USER','{{ wp_account }}');\ndefine('FTP_PASS','');\ndefine('FTP_HOST','127.0.0.1:22');\n"
-    insertafter: "require_once ABSPATH . 'wp-settings.php';"
+    insertbefore: "require_once ABSPATH . 'wp-settings.php';"
 
+- name: Restart apache
+  become: true
+  service:
+    name: httpd
+    state: restarted
+ 
 #- name: adjusting permissions
 #  command: /usr/local/bin/wp-fixperms.sh
