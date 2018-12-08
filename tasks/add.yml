@@ -108,6 +108,14 @@
 - name: get wp-fail2ban plugin
   shell: wget -O /tmp/fail2ban.$$ https://github.com/thebrandonallen/wp-fail2ban-redux/archive/master.zip && (cd /home/{{ wp_account }}/public_html/wp-content/mu-plugins && unzip /tmp/fail2ban.$$ && rm -f /tmp/fail2ban.$$)
 
+- name: create mu helper fail2ban
+  copy:
+    content: "<?php // mu-plugins/wp-fail2ban-redux-master.php\nrequire WPMU_PLUGIN_DIR.'/wp-fail2ban-redux-master/wp-fail2ban-redux.php';\n"
+    dest: /home/{{ wp_account }}/public_html/wp-content/mu-plugins/wp-fail2ban-redux-master.php
+    group: "{{ wp_account }}"
+    owner: "{{ apache_user }}"
+    mode: '0644'
+
 - name: adjust wp-config for ssh
   lineinfile:
     dest: /home/{{ wp_account }}/public_html/wp-config.php
