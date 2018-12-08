@@ -96,11 +96,17 @@
 - name: Installing Wordpress
   command: /usr/bin/wp --allow-root core install --url={{ wp_host }} --title={{ wp_host }} --admin_user={{ wp_account }} --admin_password={{ wp_pass }} --admin_email={{ wp_email }} --skip-email --path=/home/{{ wp_account }}/public_html
 
-- name: get wp-fail2ban plugin
-  shell: wget -O /tmp/fail2ban.$$ https://github.com/thebrandonallen/wp-fail2ban-redux/archive/master.zip && (cd /home/{{ wp_account }}/public_html/wp-content/plugins && unzip /tmp/fail2ban.$$ && rm -f /tmp/fail2ban.$$)
+- name: create mu-plugins folder for fail2ban plugin
+  file:
+    path: "/home/{{ wp_account }}/public_html/wp-content/mu-plugins"
+    owner: "{{ wp_account }}"
+    group: "{{ apache_user }}"
+    mode: '0755'
+    state: directory
 
-#- name: activate wp-fail2ban plugin
-#  command: /usr/bin/wp --allow-root plugin activate wp-fail2ban-redux-master --path=/home/{{ wp_account }}/public_html
+# create and place this into wp-content/mu-plugins 
+- name: get wp-fail2ban plugin
+  shell: wget -O /tmp/fail2ban.$$ https://github.com/thebrandonallen/wp-fail2ban-redux/archive/master.zip && (cd /home/{{ wp_account }}/public_html/wp-content/mu-plugins && unzip /tmp/fail2ban.$$ && rm -f /tmp/fail2ban.$$)
 
 - name: adjust wp-config for ssh
   lineinfile:
