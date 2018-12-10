@@ -4,7 +4,7 @@
   roles:
     - robertdebock.bootstrap
     - robertdebock.epel
-    - robertdebock.mysql.yml
+    - robertdebock.mysql
 
   vars:
     epel_package_state: present
