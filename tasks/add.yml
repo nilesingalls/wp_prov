@@ -23,7 +23,7 @@
     path: /home/{{ wp_account }}
     owner: root
     group: root
-    mode: 0775
+    mode: 0755
     state: directory
 
 - name: create ssh directory for wp keys
