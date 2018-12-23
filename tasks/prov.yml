@@ -42,6 +42,12 @@
     group: root
     mode: '0744'
 
+- name: Set selinux bool to allow nagios_run_sudo
+  seboolean:
+    name: nagios_run_sudo
+    state: true
+    persistent: yes
+
 - name: remove ssl.conf
   file:
     state: absent

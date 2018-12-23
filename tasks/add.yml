@@ -89,12 +89,18 @@
 
 - name: Downloading latest version of Wordpress
   command: /usr/bin/wp --allow-root core download --path=/home/{{ wp_account }}/public_html
+  become: yes
+  become_user: "{{ wp_account }}"
 
 - name: Configuring Wordpress config file
-  command: /usr/bin/wp --allow-root config create --dbname={{ wp_account }} --dbuser={{ wp_account }} --dbpass={{ lookup('password', 'credentials/mysqlpassword length=15') }} --path=/home/{{ wp_account }}/public_html
+  command: /usr/bin/wp config create --dbname={{ wp_account }} --dbuser={{ wp_account }} --dbpass={{ lookup('password', 'credentials/mysqlpassword length=15') }} --path=/home/{{ wp_account }}/public_html
+  become: yes
+  become_user: "{{ wp_account }}"
 
 - name: Installing Wordpress
-  command: /usr/bin/wp --allow-root core install --url={{ wp_host }} --title={{ wp_host }} --admin_user={{ wp_account }} --admin_password={{ wp_pass }} --admin_email={{ wp_email }} --skip-email --path=/home/{{ wp_account }}/public_html
+  command: /usr/bin/wp core install --url={{ wp_host }} --title={{ wp_host }} --admin_user={{ wp_account }} --admin_password={{ wp_pass }} --admin_email={{ wp_email }} --skip-email --path=/home/{{ wp_account }}/public_html
+  become: yes
+  become_user: "{{ wp_account }}"
 
 - name: create mu-plugins folder for fail2ban plugin
   file:
@@ -107,6 +113,8 @@
 # create and place this into wp-content/mu-plugins 
 - name: get wp-fail2ban plugin
   shell: wget -O /tmp/fail2ban.$$ https://github.com/thebrandonallen/wp-fail2ban-redux/archive/master.zip && (cd /home/{{ wp_account }}/public_html/wp-content/mu-plugins && unzip /tmp/fail2ban.$$ && rm -f /tmp/fail2ban.$$)
+  become: yes
+  become_user: "{{ wp_account }}"
 
 - name: create mu helper fail2ban
   copy:
@@ -130,3 +138,8 @@
  
 - name: adjusting permissions
   command: /usr/local/bin/wp-fixperms.sh {{ wp_account }}
+
+- name: Put SELinux in enabled mode
+  selinux:
+    policy: targeted
+    state: enforcing
