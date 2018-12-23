@@ -128,5 +128,5 @@
     name: httpd
     state: restarted
  
-#- name: adjusting permissions
-#  command: /usr/local/bin/wp-fixperms.sh
+- name: adjusting permissions
+  command: /usr/local/bin/wp-fixperms.sh {{ wp_account }}

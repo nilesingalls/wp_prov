@@ -34,6 +34,14 @@
     state: true
     persistent: yes
 
+- name: Drop a wordpressupdate cron to fix file.php permissions for wordpress/ssh to work
+  template:
+    src: templates/wordpressupdate.cron.j2
+    dest: /etc/cron.d/wordpressupdate
+    owner: root
+    group: root
+    mode: '0744'
+
 - name: remove ssl.conf
   file:
     state: absent
@@ -50,13 +58,13 @@
 - name: downloading_wp_perms
   file: path=/usr/bin/wp mode=0775
 
-#- name: Place our reset-permissions script
-#  template:
-#    src: templates/wp-fixperms.sh
-#    dest: /usr/local/bin/wp-fixperms.sh
-#    owner: root
-#    group: root
-#    mode: '0775'
+- name: Place our reset-permissions script
+  template:
+    src: templates/wp-fixperms.sh
+    dest: /usr/local/bin/wp-fixperms.sh
+    owner: root
+    group: root
+    mode: '0775'
 
 - name: get fail2ban wordpress.conf
   command: wget -O /etc/fail2ban/jail.d/wordpress.conf https://raw.githubusercontent.com/thebrandonallen/wp-fail2ban-redux/develop/config/jail/wordpress.conf

@@ -1,0 +1,3 @@
+# wp-admin/includes/file.php must be owned by apache in order for wordpress/ssh/updates to work.
+# wp-cli changes these permissions on core updates, so I fix it here.
+*/10 * * * * find /home \! -user apache -name file.php -regex ".*wp-admin.*" -exec chown apache:apache {} \; 2>&1
