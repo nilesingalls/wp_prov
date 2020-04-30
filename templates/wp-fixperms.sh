@@ -24,6 +24,10 @@ find /home/$user/public_html/wp-content -exec chgrp $apache_user {} \;
 find /home/$user/public_html/wp-content -type d -exec chmod 775 {} \;
 find /home/$user/public_html/wp-content -type f -exec chmod 664 {} \;
 
-chcon -t httpd_sys_content_t /home/$user/public_html -R
-#chcon -t httpd_sys_rw_content_t /home/$user/wp-config.php
-chcon -t httpd_sys_rw_content_t /home/$user/public_html/wp-content -R
+selinuxenabled
+if [ $? -ne 1 ]
+then
+    chcon -t httpd_sys_content_t /home/$user/public_html -R
+#    chcon -t httpd_sys_rw_content_t /home/$user/wp-config.php
+    chcon -t httpd_sys_rw_content_t /home/$user/public_html/wp-content -R
+fi
