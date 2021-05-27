@@ -1,4 +1,9 @@
 ---
+- name: Ensure group sftpusers exists
+  group:
+    name: sftpusers
+    state: present
+
 - name: Put SELinux in permissive mode, logging actions that would be blocked.
   selinux:
     policy: targeted

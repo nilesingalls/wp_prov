@@ -1,14 +1,17 @@
 ---
 - name: create db
   command: mysql -uroot -p{{ mysql_root }} -e 'use mysql; CREATE DATABASE {{ wp_account }};'
+  become: yes
 
 - name: perms
   command: mysql -uroot -p{{ mysql_root }} -e "GRANT ALL privileges ON {{ wp_account }}.* TO '{{ wp_account }}'@'localhost' IDENTIFIED BY '{{ lookup('password', 'credentials/mysqlpassword length=15') }}'"
+  become: yes
 
 - name: Add user group {{ wp_account }}
   group:
     name: "{{ wp_account }}"
     state: present
+  become: yes
 
 - name: Add user account {{ wp_account }}
   user:
@@ -17,6 +20,7 @@
     group: "{{ wp_account }}"
     groups: "sftpusers"
     append: yes
+  become: yes
 
 - name: adjust home directory permissions for apache
   file: 
@@ -25,6 +29,7 @@
     group: root
     mode: 0755
     state: directory
+  become: yes
 
 - name: create ssh directory for wp keys
   file:
@@ -33,6 +38,7 @@
     group: "{{ wp_account }}"
     mode: 0755
     state: directory
+  become: yes
 
 - name: Generate rsa key for wordpress
   command : ssh-keygen -q -t rsa -f /home/{{ wp_account }}/ssh/wp_rsa -C "" -N ""
@@ -49,18 +55,28 @@
     mode: 0640
     state: directory
     recurse: yes
+  become: yes
 
+- name: extract key since the lookup module won't work for remote connections
+  slurp:
+    src: /home/{{ wp_account }}/ssh/wp_rsa.pub
+  register: wp_rsa
+  become: yes
+ 
 - name: Set authorized key 
   authorized_key:
     user: "{{ wp_account }}"
     state: present
-    key: "{{ lookup('file', '/home/{{ wp_account }}/ssh/wp_rsa.pub') }}"
+    key: "{{ wp_rsa['content']|b64decode }}"
     key_options: 'no-port-forwarding,from="127.0.0.1"'
+  become: yes
+#  become_user: "{{ wp_account }}"
 
 - name: Put SELinux in permissive mode, logging actions that would be blocked.
   selinux:
     policy: targeted
     state: permissive
+  become: yes
 
 - name: wordpress httpd vhost
   template:
@@ -69,6 +85,7 @@
     owner: root
     group: root
     mode: '0644'
+  become: yes
 
 - name: Create public_html directory
   file:
@@ -78,6 +95,7 @@
     mode: '0755'
     state: directory
     recurse: yes
+  become: yes
 
 - name: Drop an htaccess file
   template:
@@ -86,6 +104,7 @@
     owner: "{{ wp_account }}"
     group: "{{ wp_account }}"
     mode: '0644'
+  become: yes
 
 - name: Downloading latest version of Wordpress
   command: /usr/bin/wp --allow-root core download --path=/home/{{ wp_account }}/public_html
@@ -109,6 +128,8 @@
     group: "{{ apache_user }}"
     mode: '0755'
     state: directory
+  become: yes
+#  become_user: "{{ wp_account }}"
 
 # create and place this into wp-content/mu-plugins 
 - name: get wp-fail2ban plugin
@@ -123,23 +144,30 @@
     group: "{{ wp_account }}"
     owner: "{{ apache_user }}"
     mode: '0644'
+  become: yes
+#  become_user: "{{ wp_account }}"
 
 - name: adjust wp-config for ssh
   lineinfile:
     dest: /home/{{ wp_account }}/public_html/wp-config.php
     line: "define('FTP_PUBKEY','/home/{{ wp_account }}/ssh/wp_rsa.pub');\ndefine('FTP_PRIKEY','/home/{{ wp_account }}/ssh/wp_rsa');\ndefine('FTP_USER','{{ wp_account }}');\ndefine('FTP_PASS','');\ndefine('FTP_HOST','127.0.0.1:22');\n"
     insertbefore: "require_once ABSPATH . 'wp-settings.php';"
+  become: yes
+  become_user: "{{ wp_account }}"
 
 - name: Restart apache
   become: true
   service:
     name: httpd
     state: restarted
+  become: yes
  
 - name: adjusting permissions
   command: /usr/local/bin/wp-fixperms.sh {{ wp_account }}
+  become: yes
 
 - name: Put SELinux in enabled mode
   selinux:
     policy: targeted
     state: enforcing
+  become: yes
